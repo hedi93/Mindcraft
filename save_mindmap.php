@@ -18,7 +18,8 @@
  * Saving mindcraft nodes
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,14 +29,31 @@ require_once(dirname(__FILE__).'/lib.php');
 $id = required_param('mindcraft_id', PARAM_INT);
 $jsondata = required_param('carte_json', PARAM_TEXT);
 
+if ($id) {
+    if (! $mindcraft = $DB->get_record("mindcraft", array("id"=>$id))) {
+        print_error('invalidid', 'mindcraft');
+    }
+    if (! $course = $DB->get_record("course", array("id"=>$mindcraft->course))) {
+        print_error('coursemisconf', 'mindcraft');
+    }
+    if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
+        print_error('invalidcoursemodule');
+    }
+}
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+
 if($jsondata) {
 
     if(get_magic_quotes_gpc()) {
         $jsondata = stripslashes($jsondata);
     }
 
-    if(! mindcraft_update_map($id, $jsondata)){
-        die("fail");
+    if(has_capability('mod/mindcraft:editmaps', $context)){
+        if(! mindcraft_update_map($id, $jsondata)){
+            die("fail");
+        }
     }
 
 } else {

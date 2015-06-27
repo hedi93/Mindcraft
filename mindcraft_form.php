@@ -146,7 +146,6 @@
         <?php endif ?>
     </div>
     <?php endif; ?>
-    <div id="myImages"></div>
     <div id="sample">
         <div id="myDiagram"></div>
         <div id="myOverview"></div>
@@ -154,9 +153,9 @@
         <textarea  id="mySavedModel" name="carte_json"><?=$mindcraft_map->jsondata; ?></textarea>
     </div>
 </form>
-<div class="clearfix" style="clear: both;">
+<div class="clearfix" style="clear: both; margin-top: 10px;">
     <?php if(has_capability('mod/mindcraft:editmaps', $context)) : ?>
-        <div class="block-40">
+        <div class="span5">
             <ul class="map-menu-group clearfix" id="properties">
                 <li class="carte-menu-item clearfix" style="border-bottom:0"><h4><?= get_string('properties', 'mindcraft') ?></h4></li>
                 <li class="carte-menu-item clearfix">
@@ -209,7 +208,7 @@
         </div>
     <?php endif; ?>
         <?php if( has_capability('mod/mindcraft:addcomments', $context) || (has_capability('mod/mindcraft:addcommentswheninteractive', $context) && $mindcraft_map->interactive) ) : ?>
-        <div <?php if( has_capability('mod/mindcraft:addcomments', $context)) echo 'class="block-60"' ?>>
+        <div class="<?php if( has_capability('mod/mindcraft:addcomments', $context)) echo 'span7' ?>">
             <form class="comment-form" id="comment-form" action="save_comment.php" method="POST">
                 <h4 style="margin-bottom: 22px;"><?= get_string('comments', 'mindcraft') ?></h4>
                 <div class="comments"></div>

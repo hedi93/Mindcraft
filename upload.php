@@ -21,7 +21,8 @@
  * if you like, and it can span multiple lines.
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,6 +33,27 @@ header('content-type: application/json');
 $headers = getallheaders();
 $option = new stdClass();
 $source = file_get_contents('php://input');
+
+$nodeid = $headers['x-node-id'];
+$mindcraftid = $headers['x-mindcraft-id'];
+
+if ($mindcraftid) {
+	if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$mindcraftid))) {
+		print_error('errorinvalidmindcraft', 'mindcraft');
+	}
+	if (! $mindcraft = $DB->get_record("mindcraft", array("id"=>$mindcraft_map->mindcraftid))) {
+		print_error('invalidid', 'mindcraft');
+	}
+	if (! $course = $DB->get_record("course", array("id"=>$mindcraft->course))) {
+		print_error('coursemisconf', 'mindcraft');
+	}
+	if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
+		print_error('invalidcoursemodule');
+	}
+}
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
 
 if($headers['x-upload-type'] == 'img'){
 	$type = array('image/png', 'image/gif', 'image/jpeg', 'image/jpg');
@@ -47,55 +69,56 @@ elseif(!in_array($headers['x-file-type'], $type)){
 	$option->error = get_string('unsupportedformat', 'mindcraft');
 }
 else{
-	if(isset($headers['x-param-value'])){
+	if(has_capability('mod/mindcraft:editmaps', $context)){
+		if(isset($headers['x-param-value'])){
+			if($headers['x-upload-type'] == 'img'){
+				$path = 'ressources/';
+			}
+			elseif($headers['x-upload-type'] == 'file'){
+				$path = 'ressources/files/';
+			}
+			if(!strstr($headers['x-param-value'], 'images/default/')){
+				unlink($path.$headers['x-param-value']);
+			}
+		}
+
+		// create a name for the uploaded file
+		$extension = strtolower(strrchr($headers['x-file-name'], '.'));
+		$name = sha1($nodeid.$mindcraftid);
+		$name .= $extension;
 		if($headers['x-upload-type'] == 'img'){
-			$path = 'ressources/';
+			file_put_contents('ressources/images/'.$name, $source);
+			$option->name = $name;
+			$option->content = '<img src="ressources/images/'.$name.'" alt="" />';
 		}
 		elseif($headers['x-upload-type'] == 'file'){
-			$path = 'ressources/files/';
+			file_put_contents('ressources/files/'.$name, $source);
+			$option->name = $name;
+			$option->nameforusers = $headers['x-file-name'];
+			$doc = array('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+			$xls = array('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			$ppt = array('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+			if(in_array($headers['x-file-type'], $doc)){
+				$img = 'doc-icon.png';
+			}
+			elseif(in_array($headers['x-file-type'], $ppt)){
+				$img = 'ppt-icon.png';
+			}
+			elseif(in_array($headers['x-file-type'], $xls)){
+				$img = 'xls-icon.png';
+			}
+			elseif($headers['x-file-type'] == 'application/pdf'){
+				$img = 'pdf-icon.png';
+			}
+			elseif($headers['x-file-type'] == 'application/zip'){
+				$img = 'zip-icon.png';
+			}
+			else{
+				$img = 'file-icon.png';
+			}
+			$option->fileIcon = 'images/' . $img;
+			$option->content = '<img src="ressources/images/' . $img . '" alt="' . $headers['x-file-name'] . '" />';
 		}
-		if(!strstr($headers['x-param-value'], 'images/default/')){
-			unlink($path.$headers['x-param-value']);
-		}
-	}
-	// create a name for the uploaded file
-	$nodeid = $headers['x-node-id'];
-	$mindcraftid = $headers['x-mindcraft-id'];
-	$extension = strtolower(strrchr($headers['x-file-name'], '.'));
-	$name = sha1($nodeid.$mindcraftid);
-	$name .= $extension;
-	if($headers['x-upload-type'] == 'img'){
-		file_put_contents('ressources/images/'.$name, $source);
-		$option->name = $name;
-		$option->content = '<img src="ressources/images/'.$name.'" alt="" />';
-	}
-	elseif($headers['x-upload-type'] == 'file'){
-		file_put_contents('ressources/files/'.$name, $source);
-		$option->name = $name;
-		$option->nameforusers = $headers['x-file-name'];
-		$doc = array('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-		$xls = array('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-		$ppt = array('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-		if(in_array($headers['x-file-type'], $doc)){
-			$img = 'doc-icon.png';
-		}
-		elseif(in_array($headers['x-file-type'], $ppt)){
-			$img = 'ppt-icon.png';
-		}
-		elseif(in_array($headers['x-file-type'], $xls)){
-			$img = 'xls-icon.png';
-		}
-		elseif($headers['x-file-type'] == 'application/pdf'){
-			$img = 'pdf-icon.png';
-		}
-		elseif($headers['x-file-type'] == 'application/zip'){
-			$img = 'zip-icon.png';
-		}
-		else{
-			$img = 'file-icon.png';
-		}
-		$option->fileIcon = 'images/' . $img;
-		$option->content = '<img src="ressources/images/' . $img . '" alt="' . $headers['x-file-name'] . '" />';
 	}
 }
 

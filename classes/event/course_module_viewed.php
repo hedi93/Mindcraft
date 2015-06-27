@@ -18,7 +18,8 @@
  * Defines the view event.
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -54,10 +55,15 @@ class course_module_viewed extends \core\event\course_module_viewed {
      */
     public function get_description() {
         $param = '';
-        if ($this->other['group']) $param .= 'group id='.$this->other['group'].', ';
-        if ($this->other['viewcard']) $param .= 'viewcard='.$this->other['viewcard'];
-        if (substr($param, strlen($param)-2) == ', ') $param = substr($param, 0, strlen($param)-2);
-        if (!empty($param)) $param = ' ('.$param.')';
+        if ($this->other['viewmap']){
+            $param .= 'viewmap='.$this->other['viewmap'];
+        }
+        if (substr($param, strlen($param)-2) == ', '){
+            $param = substr($param, 0, strlen($param)-2);
+        }
+        if (!empty($param)){
+            $param = ' ('.$param.')';
+        }
         return 'User with id ' . $this->userid . ' viewed mindcraft activity with instance id ' . $this->objectid. $param;
     }
 
@@ -69,7 +75,9 @@ class course_module_viewed extends \core\event\course_module_viewed {
     protected function get_legacy_logdata() {
         $param = array();
         $param['id'] = $this->contextinstanceid;
-        if ($this->other['viewcard']) $param['viewcard'] = $this->other['viewcard'];
+        if ($this->other['viewmap']){
+            $param['viewmap'] = $this->other['viewmap'];
+        }
         $url = new \moodle_url('view.php', $param);
         return array($this->courseid, 'mindcraft', 'view', $url->out(), $this->objectid, $this->contextinstanceid);
     }

@@ -18,7 +18,8 @@
  * Change mindcraft name
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -45,9 +46,14 @@ if ($id) {
     }
 }
 
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+
 $mindcraft_map->name = $name;
 if($USER->id == $mindcraft_map->userid){
-    if (!$DB->update_record("mindcraft_maps", $mindcraft_map)) {
-        echo "update failed";
+    if(has_capability('mod/mindcraft:editmaps', $context)){
+        if (!$DB->update_record("mindcraft_maps", $mindcraft_map)) {
+            echo "update failed";
+        }
     }
 }

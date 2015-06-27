@@ -1,6 +1,6 @@
 <?php
 /**
- * Comment form.
+ * Delete comment form.
  *
  * @package    mod_mindcraft
  * @author     Hedi Akrout <http://www.hedi-akrout.com>
@@ -10,18 +10,11 @@
 
 require_once("$CFG->libdir/formslib.php");
 
-class comment_form extends moodleform {
+class delete_comment_form extends moodleform {
     //Add elements to form
     public function definition() {
 
         $mform = $this->_form;
-
-        $mform->addElement('header', 'comments', get_string('response', 'mindcraft'));
-        $mform->addElement('textarea', 'comment', "Message", 'style="width:100%;box-sizing:border-box;height:308px;"');
-        $mform->addRule('comment', null, 'required', null, 'client');
-
-        $mform->addElement('hidden', 'cm', '');
-        $mform->setType('cm', PARAM_INT);
 
         $mform->addElement('hidden', 'mindcraftid', '');
         $mform->setType('mindcraftid', PARAM_INT);
@@ -32,6 +25,6 @@ class comment_form extends moodleform {
         $mform->addElement('hidden', 'responseid', '');
         $mform->setType('responseid', PARAM_INT);
 
-        $this->add_action_buttons();
+        $this->add_action_buttons(true, get_string("continue"));
     }
 }

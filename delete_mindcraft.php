@@ -18,17 +18,18 @@
  * Delete mindcraft
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
+require_once('classes/delete_mindcraft_form.php');
 
-Global $PAGE;
+Global $PAGE, $CFG;
 
 $id = required_param('mindcraft_id', PARAM_INT);
-$delete = optional_param('delete', 0, PARAM_INT);
 
 if ($id) {
     if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$id))) {
@@ -43,25 +44,52 @@ if ($id) {
     if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
         print_error('invalidcoursemodule');
     }
+    $_SESSION['course_module'] = $cm->id;
+    $_SESSION['course'] = $course;
+    $_SESSION['mindcraft_map_id'] = $mindcraft_map->id;
+}
+
+if(!isset($course) || !isset($cm)){
+    if(isset($_SESSION['course']) && isset($_SESSION['course_module'])){
+        $course = $_SESSION['course'];
+        $cm = $_SESSION['course_module'];
+        unset($_SESSION['course']);
+        unset($_SESSION['course_module']);
+    }
 }
 
 require_login($course, true, $cm);
-
-if($delete){
-    $link = mindcraft_delete_map($id);
-    header("Location: " . $link);
-}
+$context = context_module::instance($cm->id);
 
 $PAGE->set_url('/mod/mindcraft/delete_mindcraft.php', array('mindcraft_id' => $id));
-$PAGE->set_title('Delete mindcraft');
-$PAGE->set_heading($course->fullname);
+$PAGE->set_title(get_string('deletemindmap', 'mindcraft'));
 $PAGE->set_pagelayout('incourse');
 
+$mform = new delete_mindcraft_form();
+if ($mform->is_cancelled()) {
+    $id = $_SESSION['mindcraft_map_id'];
+    unset($_SESSION['mindcraft_map_id']);
+    redirect("view.php?id=" . $cm->id . "&amp;viewmap=" . $id);
+} elseif ($fromform = $mform->get_data()) {
+    unset($_SESSION['mindcraft_map_id']);
+    if(confirm_sesskey() && data_submitted()) {
+        if(has_capability('mod/mindcraft:editmaps', $context)){
+            mindcraft_delete_map($fromform->mindcraft_id);
+        }
+        redirect($CFG->wwwroot . "/mod/mindcraft/view.php?id=" . $cm->id);
+    }
+} else {
+    $toform = new stdClass();
+    $toform->mindcraft_id = $id;
+}
+if(isset($toform)){
+    $mform->set_data($toform);
+}
+
+$PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
-
 echo $OUTPUT->box_start();
-
-echo '<h2>Suppression de la carte  "' . $mindcraft_map->name . '"</h2>';
+echo '<h2>' . get_string('deletemindmap', 'mindcraft') . '"' . $mindcraft_map->name . '"</h2>';
 
 $a = new stdClass();
 $a->mapname = $mindcraft_map->name;
@@ -70,9 +98,7 @@ $a->instanceof = $mindcraft->name;
 echo "<div style='width: 60%;min-width: 220px;margin: auto;'>";
 echo "<p>".get_string('surefordeletingmindcraft', 'mindcraft', $a)."</p>";
 echo "<p>".get_string('instancesofmindcraft', 'mindcraft', $mindcraft->nummap)."</p>";
-echo "<div class='mindcraft-delete-buttons' style='padding-left:265px'><a href='delete_mindcraft.php?mindcraft_id=" . $id . "&amp;delete=1' class='btn btn-primary'>".get_string('continue', 'mindcraft')."</a><a class='btn' href='view.php?id=" . $cm->id . "&amp;viewmap=" . $id . "'>".get_string('cancel', 'mindcraft')."</a></div>";
+$mform->display();
 echo "</div>";
-
 echo $OUTPUT->box_end();
-
 echo $OUTPUT->footer();

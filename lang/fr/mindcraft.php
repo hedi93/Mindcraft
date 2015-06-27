@@ -1,5 +1,11 @@
 <?php
 $string['mindcraft:addinstance'] = 'Ajouter une instance de mindcraft';
+$string['mindcraft:viewother'] = 'Consulter les cartes mentales des autres collaborateurs';
+$string['mindcraft:viewmaps'] = 'Consulter les cartes mentales';
+$string['mindcraft:editmaps'] = 'Editer les cartes mentales';
+$string['mindcraft:addcomments'] = 'Ajouter des commentaires';
+$string['mindcraft:addcommentswheninteractive'] = 'Ajouter des commentaires que lorsque la carte mentale est interactive';
+
 $string['mindcraft'] = 'Mindcraft';
 $string['modulename'] = 'Mindcraft';
 $string['modulenameplural'] = 'Mindcrafts';
@@ -30,7 +36,7 @@ $string['mindmapinteractive_help'] = 'Autoriser les étudiants à discuter à pr
 $string['interactive'] = 'Carte interactive';
 $string['settingsfieldset'] = 'Paramètres de création des cartes';
 $string['mindcraftfieldset'] = 'Exemple personnalisé des champs';
-$string['mindcraftintro'] = 'Introduction au mindcraft';
+$string['mindcraftdescription'] = 'Description du mindcraft';
 $string['mindcraftname'] = 'Nom du mindcraft';
 $string['cardnumber'] = 'Nombre des cartes';
 
@@ -122,6 +128,7 @@ $string['deletemindcraft'] = 'Suppression de la carte';
 $string['surefordeletingmindcraft'] = 'Vous allez supprimer la carte <strong>{$a->mapname}</strong> qui est une instance de <strong>{$a->instanceof}</strong>. Cette opération est irréversible et Moodle lui-même ne crée pas une sauvegarde de récupération. <br>Voulez-vous <strong>vraiment</strong> continuer ?';
 $string['instancesofmindcraft'] = 'Ce mindcraft contient <strong>{$a}</strong> instance(s) y compris celle à supprimer.';
 $string['validatemindcraft'] = 'Validation de la carte';
+$string['deletemindmap'] = 'Suppression de la carte';
 $string['mindcraftvalidated'] = 'La carte <strong>{$a->mapname}</strong> qui est une instance de <strong>{$a->instanceof}</strong> à été validée avec succès. Maintenant, les étudiants inscrits au cours <strong>{$a->course}</strong> peuvent la consulter.';
 $string['canupdatemindcraft'] = 'Si vous voulez apporter des modifications à cette carte, vous pouvez toujours l\'invalider, travailler dessus et la revalider quand vous voulez.';
 $string['invalidatemindcraft'] = 'Invalidation de la carte';

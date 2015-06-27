@@ -11,7 +11,8 @@ function init() {
         // have mouse wheel events zoom in and out instead of scroll up and down
         "toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
         // support double-click in background creating a new node
-        "clickCreatingTool.archetypeNodeData": { 
+        "clickCreatingTool.archetypeNodeData": {
+          "id": getlastnodeid(),
           "text": (lang == "fr") ? "Nouveau noeud" : "New node",
           "color": "#4c4c4c",
           "figure": "RoundedRectangle", 
@@ -52,6 +53,7 @@ function init() {
   myDiagram.addDiagramListener("ObjectSingleClicked", function(e) {
     node = e.subject.part;
     if (!(node instanceof go.Link)){
+      alert(node.part.data.id)
       $('#part-text').val(node.part.data.text);
       $('#part-color').val(node.part.data.color);
       $('#part-figure').val(node.part.data.figure);
@@ -276,8 +278,9 @@ function init() {
     // get the node data for which the user clicked the button
     var fromNode = adorn.adornedPart;
     var fromData = fromNode.data;
+    var id = getlastnodeid();
     // create a new "State" data object, positioned off to the right of the adorned Node
-    var toData = { "text": (lang == "fr") ? "Nouveau noeud" : "New node", "figure": "RoundedRectangle",
+    var toData = { "id": id, "text": (lang == "fr") ? "Nouveau noeud" : "New node", "figure": "RoundedRectangle",
       "background": "#fff", "color":"rgb(76, 76, 76)", "border":  "#60ac60", "borderWidth": 2, "img": "images/null.png",
       "userid": userid, "timecreated": time(), "userupdate": "0", "timemodified": "0",
       "link": "#", "linkIcon": "images/null.png", "file": "null", "fileIcon" : "images/null.png", "fileName" : "null" }
@@ -302,7 +305,7 @@ function init() {
     diagram.select(newnode);
     
     diagram.commitTransaction("Add State");
-    
+
     // if the new node is off-screen, scroll the diagram to show the new node
     diagram.scrollToRect(newnode.actualBounds);
   }
@@ -400,7 +403,8 @@ function load() {
 
 //Allows you to add nodes with different figures
 function addFigure(figure){
-  var toData = { "text": (lang == "fr") ? "Nouveau noeud" : "New node", "figure": figure,
+  var id = getlastnodeid();
+  var toData = { "id": id, "text": (lang == "fr") ? "Nouveau noeud" : "New node", "figure": figure,
     "background": "#fff", "color":"rgb(76, 76, 76)", "border":  "#60ac60", "borderWidth": 2, "img": "images/null.png",
     "userid": userid, "timecreated": time(), "userupdate": "0", "timemodified": "0",
     "link": "#", "linkIcon": "images/null.png", "file": "null", "fileIcon" : "images/null.png", "fileName" : "null" }
@@ -804,14 +808,13 @@ function time() {
 
 // export diagram to png format
 function exportDiagram(){
-  var imgDiv = document.getElementById('myImages');
-  imgDiv.innerHTML = ''; // clear out the old images, if any
   var db = myDiagram.documentBounds.copy();
   var boundswidth = db.width;
   var boundsheight = db.height;
   var imgWidth = boundswidth;
   var imgHeight = boundsheight;
   var p = db.position.copy();
+  var img;
   for (var i = 0; i < boundsheight; i += imgHeight) {
     for (var j = 0; j < boundswidth; j += imgWidth) {
       img = myDiagram.makeImage({
@@ -820,12 +823,22 @@ function exportDiagram(){
         size: new go.Size(imgWidth, imgHeight),
         background: "#fff"
       });
-      // Append the new HTMLImageElement to the #myImages div
       var url = img.getAttribute('src');
       window.open(url,'Image');
-      //imgDiv.appendChild(img);
     }
   }
+}
+
+// get the last node id in the database
+function getlastnodeid(){
+  var data = {"mindcraft_id" : $('#mindcraft_id').val()};
+  lastnodeid++;
+  $.ajax({
+    url: "update_lastnodeid.php",
+    type: "POST",
+    data: data
+  })
+  return lastnodeid;
 }
 
 // lock the map

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Saving comments
+ * Get node id
  *
  * @package    mod_mindcraft
  * @author     Hedi Akrout <http://www.hedi-akrout.com>
@@ -23,14 +23,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once("../../config.php");
-require_once("lib.php");
+Global $DB;
 
-Global $USER;
+require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+require_once(dirname(__FILE__).'/lib.php');
 
 $mindcraft_id = required_param('mindcraft_id', PARAM_INT);
-$node_id = required_param('node_id', PARAM_INT);
-$post = required_param('comment_field', PARAM_TEXT);
 
 if ($mindcraft_id) {
     if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$mindcraft_id))) {
@@ -50,8 +48,10 @@ if ($mindcraft_id) {
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 
-if(has_capability('mod/mindcraft:addcomments', $context)){
-    if(!mindcraft_save_comment($node_id, $mindcraft_id, $post)){
+$mindcraftmap = $DB->get_record("mindcraft_maps", array("id" => $mindcraft_id));
+if($mindcraftmap){
+    $mindcraftmap->lastnodeid++;
+    if (!$DB->update_record("mindcraft_maps", $mindcraftmap)) {
         die("Action failed");
     }
 }

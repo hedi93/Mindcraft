@@ -167,7 +167,7 @@ button.mindcraft-menu-btn{
 .map-menu-group{
 	min-height: 435px;
 	background: #fafafa;
-	padding: 5px 0;
+	/*padding: 5px 0;*/
 	border: 1px solid #ddd;
 	border-radius: 5px;
 	list-style: none;

@@ -18,7 +18,8 @@
  * Response for comments
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -47,15 +48,35 @@ if ($id) {
         print_error('invalidcoursemodule');
     }
     $_SESSION['mindcraft_map_id'] = $mindcraft_map->id;
-    $_SESSION['course_module'] = $cm->id;
+    $_SESSION['course_module'] = $cm;
+    $_SESSION['course'] = $course;
 }
 
-$PAGE->set_url('/mod/mindcraft/update_comment.php', array('id' => $id, 'mindcraft_id' => $mindcraft_id));
+if(!isset($course) || !isset($cm)){
+    if(isset($_SESSION['course']) && isset($_SESSION['course_module'])){
+        $course = $_SESSION['course'];
+        $cm = $_SESSION['course_module'];
+        unset($_SESSION['course']);
+        unset($_SESSION['course_module']);
+    }
+}
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+
+$url = [];
+if($post_id){
+    $url['post_id'] = $post_id;
+}
+if($response_id){
+    $url['response_id'] = $response_id;
+}
+if($id){
+    $url['mindcraft_id'] = $id;
+}
+$PAGE->set_url('/mod/mindcraft/update_comment.php', $url);
 $PAGE->set_title(get_string('responsecomment', 'mindcraft'));
-$PAGE->set_heading((isset($course->fullname)) ? $course->fullname : get_string('responsecomment', 'mindcraft'));
 $PAGE->set_pagelayout('incourse');
-echo $OUTPUT->header();
-echo $OUTPUT->box_start();
 if($post_id){
     $post = $DB->get_record("mindcraft_posts", array('id' => $post_id));
     $commentid = $post->userid;
@@ -64,24 +85,23 @@ if($response_id){
     $response = $DB->get_record("mindcraft_responses", array('id' => $response_id));
     $commentid = $response->userid;
 }
-$user = $DB->get_record("user", array("id"=>$commentid));
 $mform = new comment_form();
 if ($mform->is_cancelled()) {
-    $cm = $_SESSION['course_module'];
     $id = $_SESSION['mindcraft_map_id'];
-    unset($_SESSION['course_module']);
     unset($_SESSION['mindcraft_map_id']);
-    redirect("view.php?id=" . $cm . "&amp;viewmap=" . $id);
+    redirect("view.php?id=" . $cm->id . "&amp;viewmap=" . $id);
 }
 elseif ($fromform = $mform->get_data()) {
-    unset($_SESSION['course_module']);
     unset($_SESSION['mindcraft_map_id']);
-    if( !mindcraft_update_comment($fromform->postid, $fromform->responseid, $fromform->comment)){
-        die("update failed");
+    if(has_capability('mod/mindcraft:addcomments', $context)){
+        if( !mindcraft_update_comment($fromform->postid, $fromform->responseid, $fromform->comment)){
+            die("update failed");
+        }
     }
     redirect("view.php?id=" . $fromform->cm . "&amp;viewmap=" . $fromform->mindcraftid);
 }
 else {
+    $toform = new stdClass();
     $toform->cm = $cm->id;
     $toform->mindcraftid = $id;
     $toform->postid = $post_id;
@@ -93,6 +113,10 @@ else {
         $toform->comment = $response->content;
     }
 }
+$PAGE->set_heading((isset($course->fullname)) ? $course->fullname : get_string('responsecomment', 'mindcraft'));
+echo $OUTPUT->header();
+echo $OUTPUT->box_start();
+$user = $DB->get_record("user", array("id"=>$commentid));
 ?>
 <h2><?= $mindcraft_map->name ?></h2>
 <div class="comment-entity">

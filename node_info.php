@@ -18,7 +18,8 @@
  * Get node info
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,6 +33,26 @@ $timecreated = required_param('timecreated', PARAM_INT);
 
 $userupdate = required_param('userupdate', PARAM_INT);
 $timemodified = required_param('timemodified', PARAM_INT);
+
+$mindcraft_id = required_param('mindcraft_id', PARAM_INT);
+
+if ($mindcraft_id) {
+    if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$mindcraft_id))) {
+        print_error('errorinvalidmindcraft', 'mindcraft');
+    }
+    if (! $mindcraft = $DB->get_record("mindcraft", array("id"=>$mindcraft_map->mindcraftid))) {
+        print_error('invalidid', 'mindcraft');
+    }
+    if (! $course = $DB->get_record("course", array("id"=>$mindcraft->course))) {
+        print_error('coursemisconf', 'mindcraft');
+    }
+    if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
+        print_error('invalidcoursemodule');
+    }
+}
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
 
 $userid = floor($userid);
 $timecreated = floor($timecreated);

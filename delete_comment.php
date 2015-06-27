@@ -18,19 +18,22 @@
  * Delete comment
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once("../../config.php");
-require_once("lib.php");
+require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+require_once(dirname(__FILE__).'/lib.php');
 
-Global $USER, $PAGE, $DB;
+require_once('classes/delete_comment_form.php');
 
-$response_id = optional_param('response_id', 0, PARAM_INT);
+Global $USER, $PAGE, $DB, $OUTPUT;
+
+$id = optional_param('mindcraft_id', 0, PARAM_INT);
 $post_id = optional_param('post_id', 0, PARAM_INT);
-$delete = optional_param('delete', 0, PARAM_INT);
-$id = required_param('mindcraft_id', PARAM_INT);
+$response_id = optional_param('response_id', 0, PARAM_INT);
+
 if ($id) {
     if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$id))) {
         print_error('errorinvalidmindcraft', 'mindcraft');
@@ -44,17 +47,65 @@ if ($id) {
     if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
         print_error('invalidcoursemodule');
     }
+    $_SESSION['mindcraft_map_id'] = $mindcraft_map->id;
+    $_SESSION['course_module'] = $cm;
+    $_SESSION['course'] = $course;
 }
 
-if($delete) {
-    mindcraft_delete_comment($post_id, $response_id);
-    header("Location: " . $CFG->wwwroot . "/mod/mindcraft/view.php?id=" . $cm->id . "&viewmap=" . $id);
+if(!isset($course) || !isset($cm)){
+    if(isset($_SESSION['course']) && isset($_SESSION['course_module'])){
+        $course = $_SESSION['course'];
+        $cm = $_SESSION['course_module'];
+        unset($_SESSION['course']);
+        unset($_SESSION['course_module']);
+    }
 }
 
-//$PAGE->set_url('/mod/mindcraft/delete_comment.php', array('id' => $post_id));
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+
+$url = [];
+if($post_id){
+    $url['post_id'] = $post_id;
+}
+if($response_id){
+    $url['response_id'] = $response_id;
+}
+if($id){
+    $url['mindcraft_id'] = $id;
+}
+$PAGE->set_url('/mod/mindcraft/delete_comment.php', $url);
 $PAGE->set_title(get_string('deletecomment', 'mindcraft'));
-$PAGE->set_heading((isset($course->fullname)) ? $course->fullname : 'Delete mindcraft');
 $PAGE->set_pagelayout('incourse');
+
+$mform = new delete_comment_form();
+if ($mform->is_cancelled()) {
+    $id = $_SESSION['mindcraft_map_id'];
+    unset($_SESSION['mindcraft_map_id']);
+    redirect("view.php?id=" . $cm->id . "&amp;viewmap=" . $id);
+} elseif ($fromform = $mform->get_data()) {
+    if(confirm_sesskey() && data_submitted()) {
+        if(has_capability('mod/mindcraft:addcomments', $context) || has_capability('mod/mindcraft:addcommentswheninteractive', $context)){
+            mindcraft_delete_comment($fromform->post_id, $fromform->response_id);
+        }
+        unset($_SESSION['mindcraft_map_id']);
+        redirect($CFG->wwwroot . "/mod/mindcraft/view.php?id=" . $cm->id . "&viewmap=" . $fromform->mindcraft_id);
+    }
+} else {
+    $toform = new stdClass();
+    $toform->cm = $cm->id;
+    $toform->mindcraft_id = $id;
+    if($post_id){
+        $toform->post_id = $post_id;
+    }
+    if($response_id){
+        $toform->response_id = $response_id;
+    }
+}
+if(isset($toform)){
+    $mform->set_data($toform);
+}
+$PAGE->set_heading((isset($course->fullname)) ? $course->fullname : get_string('deletecomment', 'mindcraft'));
 echo $OUTPUT->header();
 echo $OUTPUT->box_start();
 echo "<h2>".get_string('deletecomment', 'mindcraft')."</h2>";
@@ -66,10 +117,7 @@ if($post_id){
         echo "<p>" . $nb_responses . " " .get_string('commentsposted', 'mindcraft')."</p>";
     }
 }
-$href = "delete=1&amp;mindcraft_id=" . $id;
-$href .= ($post_id) ? "&amp;post_id=" . $post_id : "";
-$href .= ($response_id) ? "&amp;response_id=" . $response_id : "";
-echo "<div class='mindcraft-delete-buttons' style='padding-left:265px'><a href='delete_comment.php?" . $href . "' class='btn btn-primary'>".get_string('continue', 'mindcraft')."</a><a class='btn' href='view.php?id=" . $cm->id . "&amp;viewmap=" . $id . "'>".get_string('cancel', 'mindcraft')."</a></div>";
+$mform->display();
 echo "</div>";
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer();

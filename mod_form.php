@@ -60,7 +60,7 @@ class mod_mindcraft_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
 
         // Adding the standard "intro" and "introformat" fields.
-        $this->add_intro_editor(true, get_string('mindcraftintro', 'mindcraft'));
+        $this->standard_intro_elements(get_string('mindcraftdescription', 'mindcraft'));
 
         // add the card settings fieldset
         $mform->addElement('header', 'settingsfieldset', get_string('settingsfieldset', 'mindcraft'));

@@ -25,7 +25,8 @@
  * Moodle is performing actions across all modules.
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -89,6 +90,7 @@ function mindcraft_add_instance(stdClass $mindcraft) {
         $version->previousjsondata = $mindcraft_instance->jsondata;
         $version->lastupdate = time();
         $version->userid = $USER->id;
+        $version->oldlastnodeid = 0;
         $version->id = $DB->insert_record("mindcraft_versions", $version);
     }
 
@@ -104,7 +106,7 @@ function mindcraft_add_instance(stdClass $mindcraft) {
  * @return boolean
  **/
 function mindcraft_update_instance($mindcraft) {
-    global $DB, $USER;
+    global $DB;
     $mindcraft->id = $mindcraft->instance;
     $mindcraft_old = $DB->get_record("mindcraft", array("id" => $mindcraft->id));
     if($mindcraft->nummap < $mindcraft_old->nummap){
@@ -119,16 +121,7 @@ function mindcraft_update_instance($mindcraft) {
         for($i = 0; $i < $nummap; $i++){
             $mindcraft_new_map = mindcraft_set_new_instance($mindcraft_old);
             $mindcraft_new_map->name = get_string('map', 'mindcraft').' '.($mindcraft_old->nummap+$i+1);
-            $mindcraft_new_map->id = $DB->insert_record("mindcraft_maps", $mindcraft_new_map);
-
-            // versioning
-            $version = new stdClass();
-            $version->mindcraftmapid = $mindcraft_new_map->id;
-            $version->actualjsondata = $mindcraft_new_map->jsondata;
-            $version->previousjsondata = $mindcraft_new_map->jsondata;
-            $version->lastupdate = time();
-            $version->userid = $USER->id;
-            $version->id = $DB->insert_record("mindcraft_versions", $version);
+            $DB->insert_record("mindcraft_maps", $mindcraft_new_map);
         }
     }
     return $DB->update_record("mindcraft", $mindcraft);
@@ -216,7 +209,7 @@ function mindcraft_update_map($id, $jsondata) {
 }
 
 /**
- * Removes a map from the database
+ * Removes an instance of the mindcraft from the database
  *
  * Given an ID of an instance of this module,
  * this function will permanently delete the instance
@@ -226,17 +219,11 @@ function mindcraft_update_map($id, $jsondata) {
  * @return boolean Success/Failure
  */
 function mindcraft_delete_map($id) {
-    global $DB, $USER, $CFG;
+    global $DB, $USER;
     if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$id))) {
         return false;
     }
     if (! $mindcraft = $DB->get_record("mindcraft", array("id"=>$mindcraft_map->mindcraftid))) {
-        return false;
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$mindcraft->course))) {
-        return false;
-    }
-    if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
         return false;
     }
     if($USER->id == $mindcraft_map->userid) {
@@ -262,10 +249,11 @@ function mindcraft_delete_map($id) {
                 return false;
             }
         }
+        $mindcraft->nummap--;
         if (!$DB->update_record("mindcraft", $mindcraft)) {
             return false;
         }
-        return $CFG->wwwroot . "/mod/mindcraft/view.php?id=" . $cm->id;
+        return true;
     }
     return false;
 }
@@ -290,20 +278,11 @@ function mindcraft_get_previous_version($id){
  * Valide or invalidate a mindcraft map
  * That will allow or not the student to consult the mindmap
  * @param int $id Id of the mindcraft map
- * @return string | boolean Success/Failure
+ * @return boolean Success/Failure
  */
 function mindcraft_validate($id){
     global $DB, $USER;
     if (! $mindcraft_map = $DB->get_record("mindcraft_maps", array("id"=>$id))) {
-        return false;
-    }
-    if (! $mindcraft = $DB->get_record("mindcraft", array("id"=>$mindcraft_map->mindcraftid))) {
-        return false;
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$mindcraft->course))) {
-        return false;
-    }
-    if (! $cm = get_coursemodule_from_instance("mindcraft", $mindcraft->id, $course->id)) {
         return false;
     }
     if($USER->id == $mindcraft_map->userid) {
@@ -312,15 +291,13 @@ function mindcraft_validate($id){
             if (!$DB->delete_records("mindcraft_used", array("mindcraftmapid" => $id))) {
                 return false;
             }
-            $link = "view.php?id=" . $cm->id;
         } else {
             $mindcraft_map->state = 0;
-            $link = "view.php?id=" . $cm->id . "&amp;viewmap=" . $id;
         }
         if (!$DB->update_record("mindcraft_maps", $mindcraft_map)) {
             return false;
         }
-        return $link;
+        return true;
     }
     return false;
 }
@@ -358,6 +335,7 @@ function mindcraft_set_new_instance($mindcraft) {
     $instance->userid = $mindcraft->userid;
     $instance->timecreated = time();
     $instance->timemodified = time();
+    $instance->lastnodeid = 0;
 
     $instance->jsondata = '{ "class": "go.GraphLinksModel",
   "nodeKeyProperty": "id",

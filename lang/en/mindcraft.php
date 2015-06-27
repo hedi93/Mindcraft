@@ -1,5 +1,11 @@
 <?php
 $string['mindcraft:addinstance'] = 'Add a mindcraft instance';
+$string['mindcraft:viewother'] = 'View mind maps of other contributors';
+$string['mindcraft:viewmaps'] = 'View mind maps';
+$string['mindcraft:editmaps'] = 'Edit mind maps';
+$string['mindcraft:addcomments'] = 'Add comments';
+$string['mindcraft:addcommentswheninteractive'] = 'Add comments only when the mind map is interactive';
+
 $string['mindcraft'] = 'Mindcraft';
 $string['modulename'] = 'Mindcraft';
 $string['modulenameplural'] = 'Mindcrafts';
@@ -29,7 +35,7 @@ $string['mindmapinteractive'] = 'Interactive mind map';
 $string['mindmapinteractive_help'] = 'Allow students to discuss about the mind map';
 $string['interactive'] = 'Interactive map';
 $string['settingsfieldset'] = 'Map creation Settings';
-$string['mindcraftintro'] = 'Mindcraft Intro';
+$string['mindcraftdescription'] = 'Mindcraft description';
 $string['mindcraftname'] = 'Mindcraft Name';
 $string['cardnumber'] = 'Number of maps';
 
@@ -102,7 +108,7 @@ $string['bold'] = 'Bold';
 // Comment block
 $string['comments'] = 'Comments';
 $string['notopics'] = 'No comments about this node';
-$string['respond'] = 'Respond';
+$string['respond'] = 'Response';
 $string['submit'] = 'Submit';
 
 // other
@@ -118,11 +124,12 @@ $string['deletecomment'] = 'Deleting a comment';
 $string['surefordeletingcomment'] = 'Are you sure you want to delete this comment ?';
 $string['commentsposted'] = 'comments were posted as a response to this comment.';
 $string['deletemindcraft'] = 'Deleting the map';
-$string['surefordeletingmindcraft'] = 'You are about to delete the map <strong>{$a->mapname}</strong> wich is an instance of <strong>{$a->instanceof}</strong>. There is no way back and Moodle itself does not create any recovery backup. <br>Are you <strong>sure</strong> you want to continue ?';
+$string['surefordeletingmindcraft'] = 'You are about to delete the map <strong>{$a->mapname}</strong> wich is an instance of <strong>{$a->instanceof}</strong>. There is no way to come back and Moodle itself does not create any recovery backup. <br>Are you <strong>sure</strong> you want to continue ?';
 $string['instancesofmindcraft'] = 'There are <strong>{$a}</strong> instance(s) in this mindcraft including the one you want to delete.';
 $string['validatemindcraft'] = 'Validation of the map';
-$string['mindcraftvalidated'] = 'The map <strong>{$a->mapname}</strong> which is an instance of <strong>{$a->instanceof}</strong> has been successfully validated. Now students enrolled in <strong>{$a->course}</strong> can consult.';
-$string['canupdatemindcraft'] = 'If you want to make changes to this map, you can always disable it, work on it and revalidate when you want to.';
+$string['deletemindmap'] = 'Deleting of the mind map';
+$string['mindcraftvalidated'] = 'The map <strong>{$a->mapname}</strong> which is an instance of <strong>{$a->instanceof}</strong> has been successfully validated. Now students enrolled in <strong>{$a->course}</strong> can consult it.';
+$string['canupdatemindcraft'] = 'If you want to make changes to this map, you can always disable it, work on it and revalidate it when you want to.';
 $string['invalidatemindcraft'] = 'Invalidation of the map';
 $string['mindcraftinvalidated'] = 'The map <strong>{$a->mapname}</strong> which is an instance of <strong>{$a->instanceof}</strong> has been successfully disabled. Now students enrolled <strong>{$a->course}</strong> can not view it.';
 $string['canrevalidatemindcraft'] = 'Make your changes to the map and then you can always validate it to be visible to students';

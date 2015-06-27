@@ -18,7 +18,8 @@
  * Activate mindcraft
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -45,8 +46,17 @@ if ($id) {
 }
 
 require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
 
-$link = mindcraft_validate($id);
+if(has_capability('mod/mindcraft:editmaps', $context)){
+    mindcraft_validate($id);
+}
+
+if($mindcraft_map->state == 0){
+    $link = "view.php?id=" . $cm->id;
+} else {
+    $link = "view.php?id=" . $cm->id . "&amp;viewmap=" . $id;
+}
 
 $PAGE->set_url('/mod/mindcraft/validate_mindcraft.php', array('mindcraft_id' => $id));
 $PAGE->set_title($mindcraft_map->name);

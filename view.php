@@ -18,7 +18,8 @@
  * Prints a particular instance of mindcraft
  *
  * @package    mod_mindcraft
- * @copyright  2015 Your Name
+ * @author     Hedi Akrout <http://www.hedi-akrout.com>
+ * @copyright  2015 Hedi Akrout <contact@hedi-akrout.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -156,6 +157,7 @@ else if (isset($mindcraft_map)) {
     var lang = "<?php echo current_language() ?>";
     <?php if(has_capability('mod/mindcraft:editmaps', $context)) : ?>
         var userid = <?php echo $USER->id ?>;
+        var lastnodeid = <?php echo $mindcraft_map->lastnodeid ?>;
     <?php endif; ?>
     function checkInUse(){
         var data = { action : "checkInUse" }
@@ -183,62 +185,61 @@ if (isset($mindcraft_map)){
 // Only show a table listing other mindmaps if user have the permission
 if (has_capability('mod/mindcraft:viewother', $context)) {
     $table = new html_table();
-        $params = array($mindcraft->id);
-        $mindmaps = $DB->get_records_select('mindcraft_maps', 'mindcraftid = ?', $params, 'id ASC');
-        if ($mindmaps) {
-            $strmap = get_string("maps", "mindcraft");
-            $struser = get_string("owner", "mindcraft");
-            $strstate = get_string("state", "mindcraft");
-            $strtimecreated = get_string("timecreated", "mindcraft");
-            $strlastupdated  = get_string("timemodified", "mindcraft");
-            $table->head  = array($strmap, $struser, $strstate, $strtimecreated, $strlastupdated);
-            $table->align = array("left", "left", "left", "left", "right");
+    $params = array($mindcraft->id);
+    $mindmaps = $DB->get_records_select('mindcraft_maps', 'mindcraftid = ?', $params, 'id ASC');
+    if ($mindmaps) {
+        $strmap = get_string("maps", "mindcraft");
+        $struser = get_string("owner", "mindcraft");
+        $strstate = get_string("state", "mindcraft");
+        $strtimecreated = get_string("timecreated", "mindcraft");
+        $strlastupdated  = get_string("timemodified", "mindcraft");
+        $table->head  = array($strmap, $struser, $strstate, $strtimecreated, $strlastupdated);
+        $table->align = array("left", "left", "left", "left", "right");
 
-            foreach ($mindmaps as $mindmap) {
-                if( !has_capability('mod/mindcraft:editmaps', $context) && $mindmap->state == 0 ){
-                    continue;
-                }
-                $mapinuse = $DB->get_record("mindcraft_used", array('mindcraftmapid' => $mindmap->id));
-                if($mapinuse){
-                    if($_SERVER['REMOTE_ADDR'] == $mapinuse->ip && $USER->id == $mapinuse->userid && $viewmap) {
-                        $state = "<span style='color:#AA6708'>" . get_string("inusebyyou", "mindcraft") . "</span>";
-                        $link = html_writer::link("view.php?id=" . $cm->id . "&viewmap=" . $mindmap->id, $mindmap->name);
-                    } elseif($_SERVER['REMOTE_ADDR'] == $mapinuse->ip && $USER->id == $mapinuse->userid && !$viewmap) {
-                        $state = get_string("available", "mindcraft");
-                        $link = html_writer::link("view.php?id=".$cm->id."&viewmap=".$mindmap->id, $mindmap->name);
-                    } else {
-                        $state = "<span style='color:#A94442'>".get_string("inuse", "mindcraft")."</span>";
-                        $link = "<span style='color:#A94442'>".$mindmap->name."</span>";
-                    }
-                }
-                else{
+        foreach ($mindmaps as $mindmap) {
+            if( !has_capability('mod/mindcraft:editmaps', $context) && $mindmap->state == 0 ){
+                continue;
+            }
+            $mapinuse = $DB->get_record("mindcraft_used", array('mindcraftmapid' => $mindmap->id));
+            if($mapinuse){
+                if($_SERVER['REMOTE_ADDR'] == $mapinuse->ip && $USER->id == $mapinuse->userid && $viewmap) {
+                    $state = "<span style='color:#AA6708'>" . get_string("inusebyyou", "mindcraft") . "</span>";
+                    $link = html_writer::link("view.php?id=" . $cm->id . "&viewmap=" . $mindmap->id, $mindmap->name);
+                } elseif($_SERVER['REMOTE_ADDR'] == $mapinuse->ip && $USER->id == $mapinuse->userid && !$viewmap) {
                     $state = get_string("available", "mindcraft");
                     $link = html_writer::link("view.php?id=".$cm->id."&viewmap=".$mindmap->id, $mindmap->name);
+                } else {
+                    $state = "<span style='color:#A94442'>".get_string("inuse", "mindcraft")."</span>";
+                    $link = "<span style='color:#A94442'>".$mindmap->name."</span>";
                 }
-
-                $user = $DB->get_record("user", array("id"=>$mindmap->userid));
-                $userpicture = $OUTPUT->user_picture($user);
-                $userurl = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id));
-                $userlink = html_writer::link($userurl, fullname($user));
-
-                $timecreated = userdate($mindmap->timecreated);
-
-                $userupdate = $DB->get_record("mindcraft_versions", array("mindcraftmapid"=>$mindmap->id));
-                $userupdate = $DB->get_record("user", array("id"=>$userupdate->userid));
-                $userupdateurl = new moodle_url('/user/view.php', array('id' => $userupdate->id));
-                $userupdatelink = html_writer::link($userupdateurl, fullname($userupdate));
-                $lastupdated = $userupdatelink . '<br>';
-                $lastupdated .= userdate($mindmap->timemodified?$mindmap->timemodified:$mindmap->timecreated);
-
-                $table->data[] = array($link, $userpicture . ' ' . $userlink, $state, $timecreated, $lastupdated);
             }
-            echo "<br />";
-            echo html_writer::table($table);
-            if(empty($table->data) && $mindcraft->nummap > 0){
-                echo "<p>" . get_string('mapsnotvisible', 'mindcraft') . "</p>";
+            else{
+                $state = get_string("available", "mindcraft");
+                $link = html_writer::link("view.php?id=".$cm->id."&viewmap=".$mindmap->id, $mindmap->name);
             }
+
+            $user = $DB->get_record("user", array("id"=>$mindmap->userid));
+            $userpicture = $OUTPUT->user_picture($user);
+            $userurl = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id));
+            $userlink = html_writer::link($userurl, fullname($user));
+
+            $timecreated = userdate($mindmap->timecreated);
+
+            $userupdate = $DB->get_record("mindcraft_versions", array("mindcraftmapid"=>$mindmap->id));
+            $userupdate = $DB->get_record("user", array("id"=>$userupdate->userid));
+            $userupdateurl = new moodle_url('/user/view.php', array('id' => $userupdate->id));
+            $userupdatelink = html_writer::link($userupdateurl, fullname($userupdate));
+            $lastupdated = $userupdatelink . '<br>';
+            $lastupdated .= userdate($mindmap->timemodified?$mindmap->timemodified:$mindmap->timecreated);
+
+            $table->data[] = array($link, $userpicture . ' ' . $userlink, $state, $timecreated, $lastupdated);
         }
-    else{
+        echo "<br />";
+        echo html_writer::table($table);
+        if(empty($table->data) && $mindcraft->nummap > 0){
+            echo "<p>" . get_string('mapsnotvisible', 'mindcraft') . "</p>";
+        }
+    } else {
         echo '<p>' . get_string('nomindcraftfound', 'mindcraft') . '</p>';
     }
     if(has_capability('mod/mindcraft:addinstance', $context)){
